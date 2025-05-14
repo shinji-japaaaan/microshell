@@ -1,0 +1,16 @@
+valgrind --track-fds=yes ./microshell /bin/echo start "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" /bin/cat "|" \
+/bin/cat ";" /bin/echo done
