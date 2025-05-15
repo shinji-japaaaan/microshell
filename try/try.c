@@ -17,10 +17,10 @@ void print_error(char *msg)
 
 int	ft_strcmp(const char *s1, const char *s2)
 {
-	while (s1 || s2)
+	while (*s1 || *s2)//*s1とせずにs1としてしまっていた
 	{
-		if ((unsigned *)s1 != (unsigned *)s2)
-			return ((unsigned *)s1 - (unsigned *)s2);
+		if ((unsigned)*s1 != (unsigned)*s2)//(unsigned *)sとしてしまっていた
+			return ((unsigned)*s1 - (unsigned)*s2);
 		s1++;
 		s2++;
 	}
@@ -31,13 +31,13 @@ char	**extract_args(int start, int end, char **av)
 {
 	int		count;
 	char	**str;
-	int		i;
+	int		i = 0;//初期化漏れ
 
 	count = end - start;
 	str = malloc(sizeof(char *) * (count + 1));
 	if (str == NULL)
 	{
-		print_error("error:faral\n");
+		print_error("error:fatal\n");//faral spellミス
 		exit(1);
 	}
 	while (start < end)
@@ -48,28 +48,27 @@ char	**extract_args(int start, int end, char **av)
 
 int	is_pipe(char *s)
 {
-	if (s = NULL)
+	if (s == NULL)
 		return (0);
-	if (ft_strcmp(s, "|"))
+	if (ft_strcmp(s, "|") == 0)
 		return (1);
 	return (0);
 }
 
 int	is_break(char *s)
 {
-	if (s = NULL)
+	if (s == NULL)//s=としてしまっていた箇所が複数
 		return (1);
-	if (ft_strcmp(s, ";"))
+	if (ft_strcmp(s, ";") == 0)//== 0をつけていなかった
 		return (1);
 	if (is_pipe(s))
 		return (1);
 	return (0);
 }
 
-
 int	exec_cd(char **args)
 {
-	if (args[1] == NULL || args[2] != NULL)
+	if (args[1] == NULL || args[2] != NULL)//==ではなく=としてしまっていた
 	{
 		print_error("error: cd: bad arguments\n");
 		return (1);
@@ -89,28 +88,29 @@ void exec_cmd(char **args, char **env, int fd, int *pipe_fd)
     if (dup2(fd, 0) == -1)
     {
         print_error("error:fatal\n");
-        close(fd);
+        close(fd);//ここのclose
         if (pipe_fd)
         {
-            close(pipe_fd[0]);
-            close(pipe_fd[1]);
+            close(pipe_fd[0]);//ここのclose
+            close(pipe_fd[1]);//ここのclose
         }
         exit(1);
     }
-    close(fd);
+    close(fd);//ここのclose
     if (pipe_fd != NULL)
     {
         if (dup2(pipe_fd[1], 1) == -1)
         {
             print_error("error:fatal\n");
-            close(pipe_fd[0]);
-            close(pipe_fd[1]);
+            close(pipe_fd[0]);//ここのclose
+            close(pipe_fd[1]);//ここのclose
             exit(1);
         }
-        close(pipe_fd[0]);
-        close(pipe_fd[1]);
+        close(pipe_fd[0]);//ここのclose
+        close(pipe_fd[1]);//ここのclose
     }
     execve(args[0], args, env);
+    free(args);//executeが失敗したとき、freeをする
     print_error("error:cannot execute ");
     print_error(args[0]);
     print_error("\n");
@@ -127,17 +127,17 @@ int	exec_pipeline(int fd, int pipe_flag, char **args, char **env)
 	{
 		if (pipe(pipe_fd) == -1)
 		{
-			print_error("error:faral\n");
+			print_error("error:fatal\n");
 			exit (1);
 		}
 	}
 	pid = fork();
-	if (pid = -1)
+	if (pid == -1)
 	{
 		print_error("error:fatal\n");
 		exit (1);
 	}
-	if (pid = 0)
+	if (pid == 0)
 	{
 		if (pipe_flag)
 			exec_cmd(args, env, fd, pipe_fd);
@@ -156,13 +156,13 @@ int	exec_pipeline(int fd, int pipe_flag, char **args, char **env)
 
 int	main(int ac, char **av, char **env)
 {
-	int i = 0;
+	int i = 1;// i = 0としてしまっていた
 	int end = 0;
 	int fd = dup(0);
 	int pipe_flag = 0;
 	char **args;
 
-	while (i < end)
+	while (i < ac)//i < endとしてしまっていた
 	{
 		end = i; 
         while (!is_break(av[end]))
@@ -174,16 +174,17 @@ int	main(int ac, char **av, char **env)
 			if (exec_cd(args) != 0)
 			{
 				free(args);
+				close(fd);//ここをかなり気を付けること
 				return (1);
 			}
 		}
-		else if (args[0])
+		else if (args[0])//ここも気を付ける
 		{
 			fd = exec_pipeline(fd, pipe_flag, args, env);
 		}
 		free(args);
 		i = end + 1;
 	}
-	close(fd);
+	close(fd);//ここも気を付ける
 	return (0);
 }
