@@ -38,7 +38,7 @@ char	**extract_args(int start, int end, char **av)
 	if (str == NULL)
 	{
 		print_error("error:fatal\n");//faral spellミス
-		exit(1);
+		return (NULL);
 	}
 	while (start < end)
 		str[i++] = av[start++];
@@ -110,8 +110,8 @@ void exec_cmd(char **args, char **env, int fd, int *pipe_fd)
         close(pipe_fd[1]);//ここのclose
     }
     execve(args[0], args, env);
-    free(args);//executeが失敗したとき、freeをする
-    print_error("error:cannot execute ");
+    // free(args);//executeが失敗したとき、freeをする
+    print_error("error: cannot execute ");//エラー表示がスペースは言っていないとかでもＮＧとなってしまうので注意
     print_error(args[0]);
     print_error("\n");
     exit(1);    
@@ -121,21 +121,26 @@ int	exec_pipeline(int fd, int pipe_flag, char **args, char **env)
 {
 	int	pipe_fd[2];
 	int	pid;
+	int status;
 
-	pid = 0;
 	if (pipe_flag)
 	{
 		if (pipe(pipe_fd) == -1)
 		{
 			print_error("error:fatal\n");
-			exit (1);
+			return (-1);
 		}
 	}
 	pid = fork();
 	if (pid == -1)
 	{
 		print_error("error:fatal\n");
-		exit (1);
+		if (pipe_flag) 
+		{
+			close(pipe_fd[0]);
+			close(pipe_fd[1]);//ここはかなり見逃しやすい
+		}
+		return (-1);
 	}
 	if (pid == 0)
 	{
@@ -144,21 +149,27 @@ int	exec_pipeline(int fd, int pipe_flag, char **args, char **env)
 		else
 			exec_cmd(args, env, fd, NULL);
 	}
-	waitpid(pid, NULL, 0);
-	close(fd);
+	waitpid(pid, &status, 0);
 	if (pipe_flag)
-	{
-		close(pipe_fd[1]);
-		return (pipe_fd[0]);
-	}
-	return (dup(0));
+    {
+        close(pipe_fd[1]);
+        if (fd != 0)
+            close(fd);
+        return (pipe_fd[0]);
+    }
+    else
+    {
+        if (fd != 0)
+            close(fd);
+        return (0);
+    }
 }
 
 int	main(int ac, char **av, char **env)
 {
 	int i = 1;// i = 0としてしまっていた
 	int end = 0;
-	int fd = dup(0);
+	int fd = 0;
 	int pipe_flag = 0;
 	char **args;
 
@@ -169,18 +180,29 @@ int	main(int ac, char **av, char **env)
 			end++;
 		pipe_flag = is_pipe(av[end]);
 		args = extract_args(i, end, av);
+		if (!args)
+        {
+            if (fd != 0)
+                close(fd);
+            exit(1);
+        }
 		if (args[0] && ft_strcmp(args[0], "cd") == 0)
+			exec_cd(args);
+		else if (args[0])
 		{
-			if (exec_cd(args) != 0)
+			int new_fd = exec_pipeline(fd, pipe_flag, args, env);
+			if (new_fd == -1)
 			{
-				free(args);
-				close(fd);//ここをかなり気を付けること
-				return (1);
+				// fdは閉じるが終了はしない
+				if (fd != 0)
+        			close(fd);
+				fd = 0;  // 入力は標準入力に戻す
 			}
-		}
-		else if (args[0])//ここも気を付ける
-		{
-			fd = exec_pipeline(fd, pipe_flag, args, env);
+			else
+			{
+				// close(fd); //"0"自体はもともとあるものなので、閉じる必要はない
+				fd = new_fd;
+			}
 		}
 		free(args);
 		i = end + 1;
