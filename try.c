@@ -88,7 +88,8 @@ void exec_cmd(char **args, char **env, int fd, int *pipe_fd)
     if (dup2(fd, 0) == -1)
     {
         print_error("error:fatal\n");
-        close(fd);//ここのclose
+        if (fd != 0)
+        	close(fd);//ここのclose
         if (pipe_fd)
         {
             close(pipe_fd[0]);//ここのclose
@@ -96,8 +97,9 @@ void exec_cmd(char **args, char **env, int fd, int *pipe_fd)
         }
         exit(1);
     }
-    close(fd);//ここのclose
-    if (pipe_fd != NULL)
+    if (fd != 0)
+        close(fd);//ここのclose
+    if (pipe_fd)
     {
         if (dup2(pipe_fd[1], 1) == -1)
         {
@@ -121,7 +123,6 @@ int	exec_pipeline(int fd, int pipe_flag, char **args, char **env)
 {
 	int	pipe_fd[2];
 	int	pid;
-	int status;
 
 	if (pipe_flag)
 	{
@@ -149,18 +150,14 @@ int	exec_pipeline(int fd, int pipe_flag, char **args, char **env)
 		else
 			exec_cmd(args, env, fd, NULL);
 	}
-	waitpid(pid, &status, 0);
+	waitpid(pid, NULL, 0);
 	if (pipe_flag)
     {
         close(pipe_fd[1]);
-        if (fd != 0)
-            close(fd);
         return (pipe_fd[0]);
     }
     else
     {
-        if (fd != 0)
-            close(fd);
         return (0);
     }
 }
@@ -200,7 +197,8 @@ int	main(int ac, char **av, char **env)
 			}
 			else
 			{
-				// close(fd); //"0"自体はもともとあるものなので、閉じる必要はない
+				if (fd != 0)
+            		close(fd);
 				fd = new_fd;
 			}
 		}
