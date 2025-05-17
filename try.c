@@ -205,6 +205,7 @@ int	main(int ac, char **av, char **env)
 		free(args);
 		i = end + 1;
 	}
-	close(fd);//ここも気を付ける
+	if (fd != 0)
+    	close(fd);//ここも気を付ける
 	return (0);
 }
